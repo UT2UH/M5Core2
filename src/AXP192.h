@@ -11,6 +11,16 @@
 
 #define AXP_ADDR 0X34
 
+#define PowerOff(x) SetSleep(x)
+
+
+typedef enum                 
+{
+    kMBusModeOutput = 0,  // powered by USB or Battery  
+    kMBusModeInput = 1  // powered by outside input
+} mbus_mode_t;
+
+
 class AXP192 {
 public:
 
@@ -34,7 +44,7 @@ public:
     };
 
   	AXP192();
-  	void  begin(void);
+  	void  begin(mbus_mode_t mode = kMBusModeOutput);
 	void  ScreenBreath(uint8_t brightness);
 	bool  GetBatState();
   
@@ -45,8 +55,11 @@ public:
 	uint32_t GetCoulombchargeData(void);
 	uint32_t GetCoulombdischargeData(void);
 	float GetCoulombData(void); 
+	void PowerOff(void);
+	void SetAdcState(bool state);
   	// -- sleep
-	void SetSleep(void);
+	void PrepareToSleep(void);
+	void RestoreFromLightSleep(void);
 	void DeepSleep(uint64_t time_in_us = 0);
 	void LightSleep(uint64_t time_in_us = 0);
   	uint8_t GetWarningLeve(void);
@@ -69,6 +82,7 @@ public:
   	uint8_t GetWarningLevel(void);	
     void SetCoulombClear();
 	void SetLDO2( bool State );
+	void SetDCDC3( bool State );
 
     uint8_t AXPInState();
     bool isACIN();

@@ -87,8 +87,14 @@
     {
       public:
         M5Core2();
-        void begin(bool LCDEnable = true, bool SDEnable = true, bool SerialEnable = true, bool I2CEnable = false);
+        void begin(bool LCDEnable = true, bool SDEnable = true, bool SerialEnable = true, bool I2CEnable = false, mbus_mode_t mode = kMBusModeOutput);
         void update();
+
+
+        void shutdown();
+        int shutdown( int seconds );
+        int shutdown( const RTC_TimeTypeDef &RTC_TimeStruct);
+        int shutdown( const RTC_DateTypeDef &RTC_DateStruct, const RTC_TimeTypeDef &RTC_TimeStruct);
 
         // LCD
         M5Display Lcd;
