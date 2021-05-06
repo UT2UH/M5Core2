@@ -16,6 +16,24 @@
   // SD card
   #define TFCARD_CS_PIN 4
 
+  // Modified M5Stack 868MHz LoRa RA-01H module
+  // RA-1H LORA_RST_PIN has 4K7 pullup resistor
+  // and 0.1uF capacitor to GND
+  #define LORA_CS_PIN     26
+  #define LORA_RST_PIN    -1
+  #define LORA_IRQ_PIN    36
+
+  // Modified M5Stack NEO-8N module
+  // NEO-8N SDA connected to GPIO21(SYS_SDA)
+  // NEO-8N SCL     - GPIO22(SYS_SCL)
+  // NEO-8N EXTINT  - GPIO14
+  #define GNSS_IRQ_PIN    35
+  #define GNSS_EXTINT_PIN 14
+
+  // PasPi DS3231SN#(?) breakout board installed
+  // into M5Stack NEO-8N GPS module
+  #define RTC_IRQ_PIN     13
+
   // UART
   #define USE_SERIAL Serial
 
