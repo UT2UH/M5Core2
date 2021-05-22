@@ -129,7 +129,7 @@
          */
         void setPowerBoostKeepOn(bool en) __attribute__((deprecated));
         void setWakeupButton(uint8_t button) __attribute__((deprecated));
-        void powerOFF() __attribute__((deprecated));
+        void powerOFF() { Axp.PowerOff(); }
 
       private:
           bool isInited;
