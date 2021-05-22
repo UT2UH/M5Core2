@@ -242,11 +242,12 @@
   it.
 
   With "myButton.hide()" you can make a button temporarily invisible to the
-  touch sensor. You can specify an optional color value to draw over the
-  button if you want to make it visually disappear also. myButton.draw() makes
-  it visible to the touch sensor again, even if you have no colors defined, so
-  nothing shows on the screen. "MyButton.erase()" only paints over the button,
-  in a color you can specify (default black).
+  touch sensor and the draw() function. You can specify an optional color
+  value to draw over the button if you want to make it visually disappear
+  also. "myButton.show()" makes it visible to the touch sensor and draw()
+  function again, even if you have no colors defined so nothing shows on the
+  screen. "MyButton.erase()" only paints over the button, in a color you can
+  specify (default black).
 
 
 == Visual Buttons (Labels) with Hardware Buttons ==
@@ -804,6 +805,7 @@ class Event {
 class Button : public Zone {
  public:
   static std::vector<Button*> instances;
+  Button();
   Button(int16_t x_, int16_t y_, int16_t w_, int16_t h_, bool rot1_ = false,
          const char* name_ = "", ButtonColors off_ = {NODRAW, NODRAW, NODRAW},
          ButtonColors on_ = {NODRAW, NODRAW, NODRAW},
@@ -867,6 +869,7 @@ class Button : public Zone {
   void draw(ButtonColors bc);
   void draw();
   void hide(uint16_t color = NODRAW);
+  void show();
   void erase(uint16_t color = BLACK);
   void setLabel(const char* label_);
   void setFont(const GFXfont* freeFont_);
@@ -945,6 +948,7 @@ class M5Buttons {
                   Button* button = nullptr, Gesture* gesture = nullptr);
   void delHandlers(void (*fn)(Event&), Button* button, Gesture* gesture);
   Event event;
+  bool pianoMode;
 
  protected:
   std::vector<EventHandler> _eventHandlers;

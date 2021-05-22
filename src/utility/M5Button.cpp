@@ -4,10 +4,22 @@
 
 /* static */ std::vector<Button*> Button::instances;
 
+Button::Button() : Zone() {
+  _pin = 0xFF;
+  _invert = false;
+  _dbTime = 0;
+  *_name = 0;
+  off = on = {NODRAW, NODRAW, NODRAW};
+  datum = BUTTON_DATUM;
+  dx = dy = 0;
+  r = 0xFF;
+  init();
+}
+
 Button::Button(int16_t x_, int16_t y_, int16_t w_, int16_t h_,
                bool rot1_ /* = false */, const char* name_ /* = "" */,
-               ButtonColors off_ /*= {NODRAW, NODRAW, NODRAW} */,
-               ButtonColors on_ /* = {NODRAW, NODRAW, NODRAW} */,
+               ButtonColors off_ /* = {NODRAW, NODRAW, NODRAW} */,
+               ButtonColors on_  /* = {NODRAW, NODRAW, NODRAW} */,
                uint8_t datum_ /* = BUTTON_DATUM */, int16_t dx_ /* = 0 */,
                int16_t dy_ /* = 0 */, uint8_t r_ /* = 0xFF */
                )
@@ -29,8 +41,8 @@ Button::Button(uint8_t pin_, uint8_t invert_, uint32_t dbTime_,
                String hw_ /* = "hw" */, int16_t x_ /* = 0 */,
                int16_t y_ /* = 0 */, int16_t w_ /* = 0 */, int16_t h_ /* = 0 */,
                bool rot1_ /* = false */, const char* name_ /* = "" */,
-               ButtonColors off_ /*= {NODRAW, NODRAW, NODRAW} */,
-               ButtonColors on_ /* = {NODRAW, NODRAW, NODRAW} */,
+               ButtonColors off_ /* = {NODRAW, NODRAW, NODRAW} */,
+               ButtonColors on_  /* = {NODRAW, NODRAW, NODRAW} */,
                uint8_t datum_ /* = BUTTON_DATUM */, int16_t dx_ /* = 0 */,
                int16_t dy_ /* = 0 */, uint8_t r_ /* = 0xFF */
                )
@@ -79,6 +91,7 @@ void Button::init() {
   longPressTime = LONGPRESS_TIME;
   repeatDelay = REPEAT_DELAY;
   repeatInterval = REPEAT_INTERVAL;
+  userData = 0;
   strncpy(_label, _name, 16);
   if (_pin != 0xFF) pinMode(_pin, INPUT_PULLUP);
   instances.push_back(this);
@@ -275,7 +288,7 @@ void Button::erase(uint16_t color /* = BLACK */) {
 }
 
 void Button::draw(ButtonColors bc) {
-  _hidden = false;
+  if (_hidden || !valid()) return;
   // use locally set draw function if aplicable, global one otherwise
   if (drawFn) {
     drawFn(*this, bc);
@@ -285,8 +298,13 @@ void Button::draw(ButtonColors bc) {
 }
 
 void Button::hide(uint16_t color /* = NODRAW */) {
-  _hidden = true;
   if (color != NODRAW) erase(color);
+  _hidden = true;
+}
+
+void Button::show() {
+  _hidden = false;
+  draw();
 }
 
 char* Button::label() { return _label; }
@@ -427,7 +445,7 @@ void M5Buttons::draw() {
 void M5Buttons::update() {
 #ifdef _M5TOUCH_H_
   for (auto gesture : Gesture::instances) gesture->_detected = false;
-  BUTTONS->event = Event();
+  event = Event();
   if (TOUCH->wasRead || _leftovers) {
     _finger[TOUCH->point0finger].current = TOUCH->point[0];
     _finger[1 - TOUCH->point0finger].current = TOUCH->point[1];
@@ -439,6 +457,17 @@ void M5Buttons::update() {
       Point prev = fi.previous;
       fi.previous = fi.current;
       if (curr == prev) continue;
+      if (prev && curr) {
+        // Finger moved
+        if (fi.button) {
+          if (pianoMode && fi.button != which(curr)) {
+            fi.current = fi.previous = Point();
+          } else {
+            fi.button->fingerMove(curr, i);
+            return;
+          }
+        }
+      }
       if (!prev && curr) {
         // A new touch happened
         fi.startTime = millis();
@@ -451,22 +480,18 @@ void M5Buttons::update() {
       } else if (prev && !curr) {
         // Finger removed
         uint16_t duration = millis() - fi.startTime;
-        for (auto gesture : Gesture::instances) {
-          if (gesture->test(fi.startPoint, prev, duration)) {
-            BUTTONS->fireEvent(i, E_GESTURE, fi.startPoint, prev, duration,
-                               nullptr, gesture);
-            if (fi.button) fi.button->cancel();
-            break;
+        if (!pianoMode) {
+          for (auto gesture : Gesture::instances) {
+            if (gesture->test(fi.startPoint, prev, duration)) {
+              fireEvent(i, E_GESTURE, fi.startPoint, prev, duration,
+                        nullptr, gesture);
+              if (fi.button) fi.button->cancel();
+              break;
+            }
           }
         }
         if (fi.button) {
           fi.button->fingerUp(i);
-          return;
-        }
-      } else {
-        // Finger moved
-        if (fi.button) {
-          fi.button->fingerMove(curr, i);
           return;
         }
       }
